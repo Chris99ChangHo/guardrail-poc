@@ -11,10 +11,12 @@ blocked_commands: ["rm -rf", "rm -fr", "mkfs", "shutdown", "printenv", ":(){", "
 ask_commands: ["rm", "mv", "pip install", "npm install", "curl", "wget", "git push"]
 
 # 🟢 자율 허용
-auto_commands: ["ls", "cat", "echo", "pwd", "head", "tail", "grep", "mkdir", "touch", "python", "wc"]
+auto_commands: ["ls", "cat", "echo", "pwd", "head", "tail", "grep", "mkdir", "touch", "wc"]   # python은 코드 검사를 거치지 않으므로 자율 허용 금지(기본 ask)
 
 # 코드(AST) 검사용
-blocked_modules: [os, subprocess, shutil, socket, requests, urllib, http, ctypes, importlib, sys, pathlib, glob]
+allowed_modules: [pandas, numpy, math, statistics, json, csv, datetime, re, collections, itertools]   # 허용 목록: 이 외 모듈은 전부 차단
 blocked_calls: [eval, exec, compile, __import__, getattr, setattr, globals, locals]
-blocked_attrs: [environ, __globals__, __builtins__, __subclasses__]
-file_readers: [open, read_csv, read_excel, read_json]   # 첫 인자가 경로인 함수들
+blocked_attrs: [environ, getenv, putenv, os, sys, subprocess, builtins, __globals__, __builtins__, __subclasses__, __mro__, __bases__, __class__, __dict__]
+file_readers: [open, read_csv, read_excel, read_json, load, loadtxt, genfromtxt, read_table, read_parquet]
+path_kwargs: [file, filepath_or_buffer, path, fname, io, path_or_buf]
+blocked_values: [open, eval, exec, compile, input, breakpoint]   # 값으로 참조(f = open)하면 차단   # 첫 인자가 경로인 함수들

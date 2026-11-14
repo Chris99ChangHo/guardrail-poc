@@ -69,7 +69,7 @@ class Guard:
 
     # ---------- 셸 명령어 ----------
     def _cmd(self, cmd):
-        low = cmd.lower()
+        low = " ".join(cmd.lower().split())   # 공백 정규화
         for pat in self.p["blocked_commands"]:
             if pat in low:
                 return BLOCK, f"파괴적/위험 명령어 패턴: {pat}"
@@ -80,9 +80,21 @@ class Guard:
         if not toks:
             return ALLOW, "빈 명령"
 
+        if toks[0] == "rm":                          # 플래그를 토큰 단위로 합쳐 판정
+            fl = "".join(t.lstrip("-").lower() for t in toks[1:] if t.startswith("-") and not t.startswith("--"))
+            longs = [t for t in toks[1:] if t.startswith("--")]
+            if ("r" in fl and "f" in fl) or ("--recursive" in longs and ("--force" in longs or "f" in fl)):
+                return BLOCK, "파괴적 명령어: rm 재귀+강제 플래그"
+
         for t in toks[1:]:
-            if t.startswith("-") and "=" in t:       # --file=../.env 우회 방지
+            if t.startswith("--") and "=" in t:      # --file=../.env 우회 방지
                 t = t.split("=", 1)[1]
+            elif t.startswith("-") and len(t) > 2:   # -f../.env (단문 옵션에 붙은 값)
+                rest = t[2:]
+                if PATHY.search(rest) or rest in self.p["blocked_names"]:
+                    t = rest
+                else:
+                    continue
             if t.startswith("-"):
                 continue
             if PATHY.search(t) or t in self.p["blocked_names"]:
@@ -108,29 +120,41 @@ class Guard:
         except SyntaxError as e:
             return BLOCK, f"문법 오류: {e.msg}"
         pol, ask_reason = self.p, None
+        allowed = set(pol["allowed_modules"])
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Call) and isinstance(n.func, ast.Name):
+                n.func._is_func = True
         for n in ast.walk(tree):
             if isinstance(n, ast.Import):
                 for a in n.names:
-                    if a.name.split(".")[0] in pol["blocked_modules"]:
-                        return BLOCK, f"금지 모듈 import: {a.name}"
+                    if a.name.split(".")[0] not in allowed:
+                        return BLOCK, f"허용 목록 밖 모듈 import: {a.name}"
             elif isinstance(n, ast.ImportFrom):
-                if (n.module or "").split(".")[0] in pol["blocked_modules"]:
-                    return BLOCK, f"금지 모듈 import: {n.module}"
+                if n.level or (n.module or "").split(".")[0] not in allowed:
+                    return BLOCK, f"허용 목록 밖 모듈 import: {n.module}"
             elif isinstance(n, ast.Attribute) and n.attr in pol["blocked_attrs"]:
                 return BLOCK, f"금지 속성 접근: .{n.attr}"
+            elif isinstance(n, ast.Name) and n.id in pol["blocked_values"] and isinstance(n.ctx, ast.Load):
+                parent_call = getattr(n, "_is_func", False)
+                if not parent_call:
+                    return BLOCK, f"금지 함수를 값으로 참조(별칭 우회 의심): {n.id}"
             elif isinstance(n, ast.Call):
                 f = n.func
                 name = f.id if isinstance(f, ast.Name) else getattr(f, "attr", None)
                 if name in pol["blocked_calls"]:
                     return BLOCK, f"금지 함수 호출: {name}()"
-                if name in pol["file_readers"] and n.args:
-                    a0 = n.args[0]
-                    if isinstance(a0, ast.Constant) and isinstance(a0.value, str):
-                        v, why = self._path(a0.value)
-                        if v == BLOCK:
-                            return v, why
-                    else:  # 경로를 정적으로 알 수 없음 → 정적 분석의 한계
+                is_json_load = name == "load" and isinstance(f, ast.Attribute) and getattr(f.value, "id", "") == "json"
+                if name in pol["file_readers"] and not is_json_load:
+                    cands = list(n.args[:1]) + [k.value for k in n.keywords if k.arg in pol["path_kwargs"]]
+                    if not cands:
                         ask_reason = f"{name}() 경로를 코드만으로 확인 불가"
+                    for a0 in cands:
+                        if isinstance(a0, ast.Constant) and isinstance(a0.value, str):
+                            v, why = self._path(a0.value)
+                            if v == BLOCK:
+                                return v, why
+                        else:  # 경로를 정적으로 알 수 없음 → 정적 분석의 한계
+                            ask_reason = f"{name}() 경로를 코드만으로 확인 불가"
         return (ASK, ask_reason) if ask_reason else (ALLOW, "금지 패턴 없음")
 
     def check_code(self, src):
@@ -141,8 +165,13 @@ class Guard:
         verdict, why = self.check_code(src)
         if verdict == BLOCK or (verdict == ASK and not approved):
             return {"verdict": verdict, "reason": why, "output": ""}
-        r = subprocess.run(
-            [sys.executable, "-I", "-c", src],   # -I: 격리 모드
-            cwd=self.root, capture_output=True, text=True, timeout=10,
-        )
+        env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"}   # 최소 환경변수
+        try:
+            r = subprocess.run(
+                [sys.executable, "-I", "-c", src],   # -I: 격리 모드
+                cwd=self.root, capture_output=True, text=True, timeout=10, env=env,
+            )
+        except subprocess.TimeoutExpired:
+            self.log("code", src, "timeout", "10초 초과로 중단")
+            return {"verdict": verdict, "reason": "10초 초과로 중단", "output": ""}
         return {"verdict": verdict, "reason": why, "output": mask(r.stdout + r.stderr)}

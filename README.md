@@ -56,7 +56,7 @@
 | `core.py` | `Guard` 클래스(판정 엔진)와 `mask()` |
 | `guard.py` | 개발자용 CLI 래퍼 |
 | `app.py` | 비개발자용 Streamlit 웹 UI (공정 데이터 분석 엔지니어 페르소나) |
-| `demo_attacks.py` | 공격 시나리오 22개 + 마스킹 테스트. 기대 판정과 다르면 실패 |
+| `demo_attacks.py` | 공격 시나리오 + 마스킹 테스트. 기대 판정과 다르면 실패 |
 | `workspace/` | 에이전트가 접근 가능한 유일한 폴더 (샘플 데이터 포함) |
 | `HANDOFF.md` | 로컬 에이전트에게 작업을 넘길 때 쓰는 핸드오프 문서 |
 | `audit.log` | 실행 중 생성되는 감사 로그 (`demo_audit.log`는 데모용) |
@@ -65,7 +65,8 @@
 
 ```bash
 pip install -r requirements.txt        # pyyaml, streamlit, pandas
-python demo_attacks.py                 # 시나리오 22개 검증 + 마스킹 데모
+python demo_attacks.py                 # 시나리오 검증 + 마스킹 데모
+pytest                                 # 우회 사례 회귀 테스트 (알려진 한계는 xfail)
 python guard.py run "cat notes.txt"    # CLI: 허용
 python guard.py run "cat ../.env"      # CLI: 차단
 python guard.py log 10                 # 최근 감사 로그 10건
@@ -112,10 +113,10 @@ Python 3.9 이상이 필요합니다 (`Path.is_relative_to` 사용).
 
 ### 7.3 코드 검사 (`_code`)
 `ast`로 구문 트리를 순회하며 다음을 찾습니다.
-- 금지 모듈 `import`/`from ... import` (`os`, `subprocess`, `shutil`, `socket`, `requests`, `urllib`, `http`, `ctypes`, `importlib`, `sys`, `pathlib`, `glob`)
+- **허용 목록 밖** 모듈 `import`는 전부 차단 (허용: pandas, numpy, math, statistics, json, csv, datetime, re, collections, itertools)
 - 금지 함수 호출 (`eval`, `exec`, `compile`, `__import__`, `getattr`, `setattr`, `globals`, `locals`)
 - 금지 속성 접근 (`environ`, `__globals__`, `__builtins__`, `__subclasses__`)
-- `open`, `read_csv`, `read_excel`, `read_json`의 첫 인자: 문자열 리터럴이면 경로 검사, 리터럴이 아니면 승인(정적으로 알 수 없음)
+- `open`, `read_csv`, `np.load` 등 파일 읽기 함수의 첫 인자와 `file=`/`path=` 등 키워드 인자: 문자열 리터럴이면 경로 검사, 리터럴이 아니면 승인(정적으로 알 수 없음)
 
 ### 7.4 코드 실행 (`run_code`)
 검사 통과 후 `python -I -c <코드>`를 `workspace/`를 작업 폴더로, 10초 제한으로 실행하고, stdout/stderr 모두 마스킹해 반환합니다. **진짜 샌드박스가 아닙니다** (9장 참고).
@@ -140,7 +141,7 @@ Python 3.9 이상이 필요합니다 (`Path.is_relative_to` 사용).
 | `blocked_names` | 경로에 들어 있으면 차단할 이름 |
 | `blocked_commands` | 명령어에 포함되면 차단할 문자열 |
 | `ask_commands` / `auto_commands` | 승인 / 자율 명령어 |
-| `blocked_modules` / `blocked_calls` / `blocked_attrs` | 코드 검사 금지 목록 |
+| `allowed_modules`(허용 목록) / `blocked_calls` / `blocked_attrs` | 코드 검사 금지 목록 |
 | `file_readers` | 첫 인자가 경로인 함수 이름 |
 
 예: `ask_commands`에 `git push`를 이미 넣어 두었습니다. 사내 코드명 같은 민감 키워드를 다루려면 `mask()`의 패턴 목록(`core.py`)을 확장하세요.
@@ -148,9 +149,12 @@ Python 3.9 이상이 필요합니다 (`Path.is_relative_to` 사용).
 ## 9. 알려진 한계 (솔직하게)
 
 직접 검증한 우회 사례와 조치 상태입니다.
-- `Path('../.env').read_text()`(pathlib)와 `glob.glob('../*')`는 처음에 통과했으나, `pathlib`과 `glob`을 금지 모듈에 추가해 **차단으로 보강**했습니다 (시나리오 2개 추가).
-- `pandas.read_csv('../.env')`와 `io.open('../.env')`는 차단되고, 문자열을 이어 붙인 `open('..'+'/.env')`는 승인으로 분류됩니다.
-- **여전히 통과하는 사례**: `fileinput.input('../.env')`, `zipfile.ZipFile(...)` 등 목록에 없는 파일 접근 모듈. 차단 목록 방식은 목록 밖을 놓친다는 한계가 그대로 남아 있어, 허용 목록(필요한 모듈만 허용) 방식의 병행이 다음 과제입니다.
+- **`python`이 자율 허용되어 코드 검사를 통째로 건너뛰던 구멍 (수정됨)**: `python -c 'import os...'`가 allow였습니다. `python`을 `auto_commands`에서 제거해 기본 승인(ask)으로 처리합니다. 단 승인 후 실행되는 코드 자체는 CLI 경로에서 검사되지 않습니다.
+- **키워드 인자·별칭 (수정됨)**: `open(file='../.env')`, `f = open; f('../.env')` → 키워드 인자 검사 추가, 금지 함수를 값으로 참조하면 차단.
+- **단문 옵션에 붙은 경로 (수정됨)**: `cat -f../.env` → 옵션 값도 경로 검사. `rm  -rf`(공백 2개)·`rm -r -f` → 공백 정규화와 플래그 토큰 단위 판정으로 block.
+- **차단 목록의 한계 (허용 목록으로 전환)**: `fileinput`, `numpy.load`, `platform.os.getenv('HOME')`이 통과했습니다. 모듈은 허용 목록 방식으로 바꾸고 `os`/`sys`/`builtins`/`getenv` 속성 접근도 차단합니다.
+- **실행 환경 (보강)**: `run_code`는 최소 환경변수로 실행하고 `TimeoutExpired`를 처리합니다.
+- **여전히 남은 한계 (xfail 테스트로 표시)**: 문자열 조합 경로는 ask로만 분류됩니다. 마스킹은 정규식 방식이라 base64 등 인코딩 출력은 못 막습니다. 허용 모듈 안의 기능(예: pandas의 다양한 I/O 함수)은 목록 밖 함수를 놓칠 수 있습니다.
 
 그 밖의 구조적 한계:
 - 정적 분석은 난독화되었거나 동적으로 생성되는 코드를 완전히 막을 수 없습니다. 차단 목록 방식이라 목록에 없는 경로는 놓칩니다.
@@ -173,5 +177,5 @@ Python 3.9 이상이 필요합니다 (`Path.is_relative_to` 사용).
 
 1. **문제 정의**: 위 1장의 표와 한 문장 ("국내 저장으로 위험이 줄어도 에이전트의 행동은 별도 통제가 필요")
 2. **아키텍처**: 3장 도식 1장
-3. **결과**: 정상 vs 공격 캡처, `demo_attacks.py` 22/22 결과
+3. **결과**: 정상 vs 공격 캡처, `demo_attacks.py` 전체 통과 결과
 4. **한계와 방향**: 9장의 우회 사례와 10장의 로드맵. 한계를 직접 검증해서 밝혔다는 점이 신뢰를 줍니다.

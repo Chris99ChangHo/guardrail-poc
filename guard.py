@@ -46,6 +46,10 @@ def main(argv):
     except FileNotFoundError:
         print("명령어를 찾을 수 없음")
         return 127
+    except subprocess.TimeoutExpired:
+        g.log("command", cmd, "timeout", "30초 초과로 중단")
+        print("30초 초과로 중단")
+        return 124
     print(mask(r.stdout + r.stderr), end="")
     return r.returncode
 

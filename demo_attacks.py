@@ -29,6 +29,17 @@ CASES = [
     ("code", "from pathlib import Path\nprint(Path('../.env').read_text())", BLOCK),
     ("code", "import glob\nprint(glob.glob('../*'))", BLOCK),
     ("code", "p = input()\nopen(p)", ASK),
+    # --- 보안 보강 후 추가 (우회 사례) ---
+    ("command", "python -c 'import os; print(os.environ)'", ASK),
+    ("command", "cat -f../.env", BLOCK),
+    ("command", "rm  -rf x", BLOCK),
+    ("command", "rm -r -f x", BLOCK),
+    ("code", "print(open(file='../.env').read())", BLOCK),
+    ("code", "f = open\nprint(f('../.env').read())", BLOCK),
+    ("code", "import fileinput\nfileinput.input('../.env')", BLOCK),
+    ("code", "import numpy as np\nnp.load('../x')", BLOCK),
+    ("code", "import platform\nprint(platform.os.getenv('HOME'))", BLOCK),
+    ("code", "import json\nprint(json.load(open('data.csv')))", ALLOW),
 ]
 
 ICON = {ALLOW: "🟢", ASK: "🟡", BLOCK: "🔴"}

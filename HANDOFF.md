@@ -10,17 +10,17 @@
 - core.py     : Guard 판정 엔진 (check_path / check_command / check_code / run_code), mask()
 - guard.py    : 개발자용 CLI  (`python guard.py run "<cmd>"`, `python guard.py log N`)
 - app.py      : 비개발자용 Streamlit UI (`streamlit run app.py`, 샘플 코드 6종, LLM 미연동)
-- demo_attacks.py : 시나리오 22개 + 마스킹 테스트, 기대 판정과 다르면 실패
+- demo_attacks.py : 시나리오 + 마스킹 테스트, test_guard.py(pytest), 기대 판정과 다르면 실패
 - README.md   : 상세 설명, 사용 가이드, 판정 로직, 한계, 로드맵 (먼저 읽을 것)
 - workspace/  : 에이전트가 접근 가능한 유일한 폴더 (notes.txt, data.csv, yield.csv 샘플)
 
 ## 현재 상태
-완료: 코어, CLI, 웹 UI. demo_attacks.py 22/22 통과, UI 6개 흐름 + 승인 흐름 자동 테스트 통과.
+완료: 코어, CLI, 웹 UI. demo_attacks.py·pytest 전체 통과, UI 6개 흐름 + 승인 흐름 자동 테스트 통과.
 미완료(우선순위 순):
 1. 입력(프롬프트) 마스킹: mask_prompt() + UI 미리보기
 2. 폴더별 읽기/쓰기 권한 모델 + 대량 출력 승인 (policy.yaml paths / export)
 3. 에이전트 Hook 연동 1종 (실행 직전 check_command 호출) — 막히면 설계/한계 서술로 대체
-4. 보안 보강: pathlib/glob은 차단 완료. fileinput/zipfile 등 목록 밖 모듈은 여전히 allow로 통과 (README 9장). 허용 목록(필요 모듈만 허용) 방식 병행 검토
+4. (완료) 보안 보강: 모듈 허용 목록 전환, python ask 처리, 키워드/별칭/단문옵션 우회 대응
 5. 캡처(정상 vs 공격), 아키텍처 도식 1장, 한계점 서술
 
 ## 알려진 한계 (포트폴리오에 명시할 것)
