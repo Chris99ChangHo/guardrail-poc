@@ -1,0 +1,20 @@
+# 가드레일 정책 — CLI(개발자)와 웹 UI(비개발자)가 같은 파일을 공유한다.
+workspace: ./workspace          # 에이전트가 건드려도 되는 유일한 폴더
+
+# 이 이름이 경로 어디에든 들어 있으면 🔴 차단
+blocked_names: [".env", ".ssh", ".aws", ".gnupg"]
+
+# 🔴 명령어에 이 문자열이 포함되면 즉시 차단
+blocked_commands: ["rm -rf", "rm -fr", "mkfs", "shutdown", "printenv", ":(){", "chmod 777"]
+
+# 🟡 사람이 승인해야 실행
+ask_commands: ["rm", "mv", "pip install", "npm install", "curl", "wget", "git push"]
+
+# 🟢 자율 허용
+auto_commands: ["ls", "cat", "echo", "pwd", "head", "tail", "grep", "mkdir", "touch", "python", "wc"]
+
+# 코드(AST) 검사용
+blocked_modules: [os, subprocess, shutil, socket, requests, urllib, http, ctypes, importlib, sys, pathlib, glob]
+blocked_calls: [eval, exec, compile, __import__, getattr, setattr, globals, locals]
+blocked_attrs: [environ, __globals__, __builtins__, __subclasses__]
+file_readers: [open, read_csv, read_excel, read_json]   # 첫 인자가 경로인 함수들
