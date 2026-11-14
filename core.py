@@ -150,6 +150,8 @@ class Guard:
                         ask_reason = f"{name}() 경로를 코드만으로 확인 불가"
                     for a0 in cands:
                         if isinstance(a0, ast.Constant) and isinstance(a0.value, str):
+                            if "://" in a0.value:
+                                return BLOCK, f"외부 네트워크 URL 접근 차단: {a0.value}"
                             v, why = self._path(a0.value)
                             if v == BLOCK:
                                 return v, why

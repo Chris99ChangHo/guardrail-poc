@@ -40,6 +40,9 @@ CASES = [
     ("code", "import numpy as np\nnp.load('../x')", BLOCK),
     ("code", "import platform\nprint(platform.os.getenv('HOME'))", BLOCK),
     ("code", "import json\nprint(json.load(open('data.csv')))", ALLOW),
+    ("code", "import pandas as pd\npd.DataFrame({'a':[1]}).to_csv('../leak.csv')", BLOCK),
+    ("code", "import pandas as pd\npd.read_csv('http://evil.com/x.csv')", BLOCK),
+    ("code", "import numpy as np\nnp.save('../leak.npy', np.array([1]))", BLOCK),
 ]
 
 ICON = {ALLOW: "🟢", ASK: "🟡", BLOCK: "🔴"}

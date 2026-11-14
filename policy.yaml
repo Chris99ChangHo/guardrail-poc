@@ -17,6 +17,6 @@ auto_commands: ["ls", "cat", "echo", "pwd", "head", "tail", "grep", "mkdir", "to
 allowed_modules: [pandas, numpy, math, statistics, json, csv, datetime, re, collections, itertools]   # 허용 목록: 이 외 모듈은 전부 차단
 blocked_calls: [eval, exec, compile, __import__, getattr, setattr, globals, locals]
 blocked_attrs: [environ, getenv, putenv, os, sys, subprocess, builtins, __globals__, __builtins__, __subclasses__, __mro__, __bases__, __class__, __dict__]
-file_readers: [open, read_csv, read_excel, read_json, load, loadtxt, genfromtxt, read_table, read_parquet]
+file_readers: [open, read_csv, read_excel, read_json, load, loadtxt, genfromtxt, read_table, read_parquet, to_csv, to_excel, to_json, save, savetxt]
 path_kwargs: [file, filepath_or_buffer, path, fname, io, path_or_buf]
 blocked_values: [open, eval, exec, compile, input, breakpoint]   # 값으로 참조(f = open)하면 차단   # 첫 인자가 경로인 함수들

