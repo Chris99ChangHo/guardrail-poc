@@ -16,6 +16,9 @@ g = Guard(log_file="test_audit.log")
     ("kubectl delete pod x", ASK),
     ("terraform destroy", BLOCK),
     ("cat ~/.aws/credentials", BLOCK),
+    ("cat ~/.config/gcloud/application_default_credentials.json", BLOCK),
+    ("gcloud compute instances delete x", ASK),
+    ("gcloud projects delete p", BLOCK),
 ])
 def test_command(cmd, exp):
     assert g._cmd(cmd)[0] == exp

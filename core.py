@@ -22,7 +22,8 @@ MASKS = [
     (re.compile(r"\b\d{6}-[1-4]\d{6}\b"), "******-*******"),            # 주민등록번호
     (re.compile(r"\b01[016789]-?\d{3,4}-?\d{4}\b"), "***-****-****"),   # 휴대폰
     (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "***@***"),               # 이메일
-    (re.compile(r"(?:sk-[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16})"), "[API_KEY]"),
+    (re.compile(r"(?:sk-[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z-_]{35})"), "[API_KEY]"), # OpenAI, AWS, GCP API Key
+    (re.compile(r"-----BEGIN[ A-Z_-]*PRIVATE KEY-----"), "[PRIVATE_KEY]"),  # 서비스 계정 / SSH Private Key 헤더
 ]
 
 

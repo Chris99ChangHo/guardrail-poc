@@ -48,6 +48,10 @@ CASES = [
     ("command", "kubectl delete pod x", ASK),
     ("command", "terraform destroy", BLOCK),
     ("command", "cat ~/.aws/credentials", BLOCK),
+    # --- GCP 클라우드 시나리오 ---
+    ("command", "cat ~/.config/gcloud/application_default_credentials.json", BLOCK),
+    ("command", "gcloud compute instances delete x", ASK),
+    ("command", "gcloud projects delete p", BLOCK),
 ]
 
 ICON = {ALLOW: "🟢", ASK: "🟡", BLOCK: "🔴"}
@@ -60,7 +64,7 @@ for kind, text, expected in CASES:
     print(f"{'✅' if ok else '❌'} {ICON[verdict]} [{kind:7}] {shown:45.45} → {why}")
 
 print("\n[마스킹 테스트]")
-sample = "문의: kim@corp.com / 010-1234-5678 / 901231-1234567 / sk-abcdefghijklmnop1234"
+sample = "문의: kim@corp.com / 010-1234-5678 / 901231-1234567 / sk-abcdefghijklmnop1234 / AIzaSyD-1234567890abcdefghijklmnopqrstu / -----BEGIN RSA PRIVATE KEY-----"
 print(" before:", sample)
 print(" after :", mask(sample))
 
