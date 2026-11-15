@@ -52,6 +52,7 @@ CASES = [
     ("command", "cat ~/.config/gcloud/application_default_credentials.json", BLOCK),
     ("command", "gcloud compute instances delete x", ASK),
     ("command", "gcloud projects delete p", BLOCK),
+    ("command", "pip install gcloud", ASK),
 ]
 
 ICON = {ALLOW: "🟢", ASK: "🟡", BLOCK: "🔴"}

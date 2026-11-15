@@ -2,7 +2,7 @@
 workspace: ./workspace          # 에이전트가 건드려도 되는 유일한 폴더
 
 # 이 이름이 경로 어디에든 들어 있으면 🔴 차단
-blocked_names: [".env", ".ssh", ".aws", ".gnupg", "gcloud", "application_default_credentials.json"]
+blocked_names: [".env", ".ssh", ".aws", ".gnupg", "application_default_credentials.json"]
 
 # 🔴 명령어에 이 문자열이 포함되면 즉시 차단
 blocked_commands: ["rm -rf", "rm -fr", "mkfs", "shutdown", "printenv", ":(){", "chmod 777", "terraform destroy", "gcloud projects delete"]
