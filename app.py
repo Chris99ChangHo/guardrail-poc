@@ -151,21 +151,22 @@ with col2:
     with st.expander("💻 개발자용 CLI (guard.py) 사용법"):
         st.markdown(
             """
-            동일한 `policy.yaml` 엔진을 터미널 CLI에서도 사용합니다:
+            동일한 `policy.yaml` 규칙 엔진을 터미널 CLI 래퍼에서도 사용합니다:
+            *(에이전트의 자체 도구 우회를 막으려면 실행 직전 훅이 필요하며, 현재 PoC는 수동 래퍼를 제공합니다)*
+
             ```bash
             # 🟢 자율 허용
             python guard.py run "cat notes.txt"
 
-            # 🟡 사람 승인 대기 ([y/N] 질문)
-            python guard.py run "terraform apply"
-            python guard.py run "gcloud compute instances delete x"
+            # 🟡 사람 승인 대기 ([y/N] 질문 후 실행/취소)
+            python guard.py run "rm old.txt"
 
             # 🔴 즉시 차단
             python guard.py run "cat ~/.aws/credentials"
             python guard.py run "terraform destroy"
 
             # 📋 최근 감사 로그 확인
-            python guard.py log 10
+            python guard.py log 5
             ```
             """
         )
