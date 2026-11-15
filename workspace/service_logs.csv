@@ -1,0 +1,12 @@
+timestamp,service,status_code,latency_ms,user_email,message
+2026-03-01 09:10:00,auth-service,200,42,admin.kim@corp.com,User login successful
+2026-03-01 09:25:00,order-api,200,85,park.sh@corp.com,Order #1001 processed
+2026-03-01 10:05:00,payment-gw,200,120,lee.mh@corp.com,Payment approved for order #1001
+2026-03-01 10:30:00,auth-service,500,510,admin.kim@corp.com,Internal DB timeout on auth check
+2026-03-01 11:15:00,order-api,500,890,choi.yj@corp.com,Deadlock detected during order transaction
+2026-03-01 11:45:00,worker-queue,500,1240,devops.jung@corp.com,AWS S3 upload failed with key AKIAIOSFODNN7EXAMPLE: 503 SlowDown
+2026-03-01 12:00:00,order-api,200,95,park.sh@corp.com,Order #1002 processed
+2026-03-01 12:30:00,auth-service,200,38,admin.kim@corp.com,Token refreshed
+2026-03-01 13:10:00,payment-gw,500,1500,lee.mh@corp.com,Payment gateway connection reset
+2026-03-01 13:40:00,order-api,200,110,choi.yj@corp.com,Order #1003 processed
+2026-03-01 14:00:00,auth-service,200,45,admin.kim@corp.com,Health check OK

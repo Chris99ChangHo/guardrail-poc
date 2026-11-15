@@ -3,3 +3,4 @@ demo_audit.log
 __pycache__/
 .venv/
 test_audit.log
+.streamlit/

@@ -1,7 +1,7 @@
 # guardrail-poc 핸드오프
 
 ## 무엇인가
-기술유출에 민감한 기업(예: 반도체)이 AI 에이전트/바이브 코딩을 도입한다는 가정의 PoC.
+기술유출과 클라우드 보안에 민감한 기업(예: 핀테크/클라우드 서비스)이 AI 에이전트/바이브 코딩을 도입한다는 가정의 PoC.
 에이전트의 행동을 위험도에 따라 자율(allow) / 승인(ask) / 차단(block)으로 통제하고,
 출력은 마스킹(DLP), 모든 판정은 audit.log(JSON Lines)에 기록한다. 마감 2026-11-15.
 
@@ -12,7 +12,7 @@
 - app.py      : 비개발자용 Streamlit UI (`streamlit run app.py`, 샘플 코드 6종, LLM 미연동)
 - demo_attacks.py : 시나리오 + 마스킹 테스트, test_guard.py(pytest), 기대 판정과 다르면 실패
 - README.md   : 상세 설명, 사용 가이드, 판정 로직, 한계, 로드맵 (먼저 읽을 것)
-- workspace/  : 에이전트가 접근 가능한 유일한 폴더 (notes.txt, data.csv, yield.csv 샘플)
+- workspace/  : 에이전트가 접근 가능한 유일한 폴더 (notes.txt, data.csv, service_logs.csv 샘플)
 
 ## 현재 상태
 완료: 코어, CLI, 웹 UI. demo_attacks.py·pytest 전체 통과, UI 6개 흐름 + 승인 흐름 자동 테스트 통과.

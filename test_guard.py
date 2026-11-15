@@ -12,6 +12,10 @@ g = Guard(log_file="test_audit.log")
     ("rm  -rf x", BLOCK),
     ("rm -r -f x", BLOCK),
     ("rm old.txt", ASK),
+    ("terraform apply", ASK),
+    ("kubectl delete pod x", ASK),
+    ("terraform destroy", BLOCK),
+    ("cat ~/.aws/credentials", BLOCK),
 ])
 def test_command(cmd, exp):
     assert g._cmd(cmd)[0] == exp
