@@ -147,8 +147,12 @@ class Guard:
                 if name in pol["file_readers"] and not is_json_load:
                     cands = list(n.args[:1]) + [k.value for k in n.keywords if k.arg in pol["path_kwargs"]]
                     if not cands:
-                        ask_reason = f"{name}() 경로를 코드만으로 확인 불가"
+                        # to_csv, to_excel, to_json은 경로 인자가 없으면 파일 쓰기가 아니라 메모리 문자열/객체 반환이므로 허용
+                        if name not in ("to_csv", "to_excel", "to_json"):
+                            ask_reason = f"{name}() 경로를 코드만으로 확인 불가"
                     for a0 in cands:
+                        if isinstance(a0, ast.Constant) and a0.value is None:
+                            continue  # path_or_buf=None은 문자열 반환이므로 안전
                         if isinstance(a0, ast.Constant) and isinstance(a0.value, str):
                             if "://" in a0.value:
                                 return BLOCK, f"외부 네트워크 URL 접근 차단: {a0.value}"
