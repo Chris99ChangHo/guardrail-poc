@@ -31,6 +31,8 @@
 
 ## 3. 아키텍처
 
+![Guardrail PoC 아키텍처](docs/guardrail_poc_architecture.png)
+
 ```
 [개발자: CLI 래퍼 guard.py]  ─┐
                               ├─▶ [Guardrail Core: core.py]
